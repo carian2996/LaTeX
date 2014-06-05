@@ -1,0 +1,179 @@
+% Ian Castillo Rosales
+% Banco de México
+% 29052014
+
+\documentclass{report}
+\pagestyle{headings}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{hyperref}
+\title{reporte_cat}
+
+\begin{document}
+
+% Portada del documento
+\begin{titlepage}
+\begin{center}
+\textsc{\Large Banco de México}\\[1.5cm]
+\textsc{\Large Gerencia de Información del Sistema Financiero}\\[0.75cm]
+{ \huge \bfseries Matriz de condiciones para el calculo del CAT e información consistente del CCT-H. \\[0.4cm] } % Titulo
+
+\vspace{2cm}
+
+\emph{Autor} \\
+Ian Castillo Rosales \\
+\texttt{ian.castillo@banxico.org.mx}
+
+\vspace{0.5cm}
+
+\emph{Colaborador} \\
+Alejandro Escamilla \\
+\texttt{fescamilla@banxico.org.mx}
+
+\vfill
+
+{\large \today} % Fecha de creación
+\end{center}
+\end{titlepage}
+
+% Índice
+\tableofcontents
+
+% Capítulo I Introducción
+\chapter{Introducción} 
+% 
+El presente documento consta de las especificaciones del código para la generación de la matriz de condiciones para el calculo del CAT e información consistente del CCT-H. El código fue escrito en \textit{Lenguaje R}. 
+Este documento es de carácter informativo con respecto al código que genera la matriz de condiciones y no pretende ser una introducción al \textit{Lenguaje R}, por lo que se asume que el lector posea los conocimientos mínimos de programación en \textit{R}. El documento se divide en diferentes capítulos como se muestra a continuación:
+\begin{enumerate}
+    \item Código
+    \begin{enumerate}
+        \item Entrada y salida
+        \item Opciones, librerías y extracción de datos
+        \item Módulos \footnote[1]{Las partes de la matriz son llamadas módulos}
+    \end{enumerate}
+    \item Funciones
+    \item Referencias
+\end{enumerate}
+La estructura lógica del código resulta ser muy sencilla a la hora de analizar la tarea a programar. En general, para producir cualquier módulo (o parte de la matriz) se tiene que realizar filtrados, comparaciones, listados, obtención de niveles, etcétera. Resulta importante tomar una atención extra en los módulos especiales como \textit{Aforos}, \textit{Avaluos}, \textit{Pagos al millar no uniformes}, \textit{Tasas}, \textit{Seguros con gracia y bonificaciones}, así como el de \textit{CAT} donde los módulos difieren en estructura lógica a los demás, puesto que presentan características especiales para cada uno de ellos. El código realiza la tarea en tres pasos diferentes:
+\begin{enumerate}
+\item Extrae datos de Excel
+\item Genera una matriz en \textit{R} con las características de los módulos
+\item Escribe y da formato en Excel
+\end{enumerate}
+
+Para la explicación de cada módulo se presenta un resumen de lo que se pretende hacer y después se presentan las instrucción más significativas del módulo. Sería imposible explicar a detalle cada una de las funciones que se utilizan, así como explicar profundamente la lógica para cada una de las instrucciones que hay en el código.
+
+\begin{flushleft}
+Módulo. Representa parte de la información contenida en la matriz final. \\
+Resumen. Estructura lógica para generar el módulo. \\
+\texttt{código}. Funciones más representativas del módulo.
+\end{flushleft}
+
+El código \textit{Reporte} se encuentra en la ruta \texttt{H:/Generales/800/Proyectos/Calculadora Hipotecaria/Desarrollos/} y está en constante actualización y mejoramiento para una mayor funcionalidad. Cualquier comentario acerca del código puede mandar un mensaje a \texttt{ian.castillo@banxico.org.mx}. \\
+
+Este reporte fue generado en \LaTeXe \footnote[2]{http://www.latex-project.org/}
+
+% CAPÍTULO CÓDIGO
+\chapter{Código}
+El código genera la matriz de condiciones para el calculo del CAT e información consistente del CCT-H. El código fue generado en \textit{Lenguaje R}\footnote[3]{http://www.r-project.org/}.
+
+La ruta donde usted puede encontrar el código es la siguiente: \\ 
+\texttt{H:/Generales/800/Proyectos/Calculadora Hipotecaria/Desarrollos/}
+
+\section{Entrada y Salida}
+    ENTRADA\\
+    \texttt{archivo} = (Caracter) Nombre del archivo \textit{.xlsx} con los datos a importar\\ 
+    \texttt{datos} = (Lógico) FALSE Carga los datos con la función \textit{readWorksheetFromFile}. TRUE Carga     los datos de un archivo .RData\\ 
+    \texttt{toge} = (Lógico) FALSE Genera un archivo por cada institución. TRUE Genera un archivo con     todas las instituciones
+    
+    SALIDA\\
+    Serie de archivos \textit{.xlsx} por cada institución (con página web) con sus respectivos productos (vigentes). Matriz de condiciones para el calculo del CAT e información consistente del CCT-H.
+
+\section{Opciones, librerías y extracción de datos}
+Las opciones y librerías dentro del programa se listan en la siguiente tabla con una pequeña descripción.\\[0.2cm]
+\begin{tabular}{ |l|l|}
+        \hline
+        \multicolumn{2}{|c|}{Librerías} \\
+        \hline
+        \textit{XLConnect} & Manipula archivos de Excel desde R \\
+        \textit{rJava} & Interfaz de bajo nivel para Java VM\\
+        \hline
+        \multicolumn{2}{|c|}{Opciones} \\
+        \hline
+        \textit{setwd} & Define el área de trabajo para guardar los archivos creados\\
+        \textit{scipen} & Opción para mostrar números sin notación exponencial\\
+        \textit{encoding} & \\
+        \textit{java.parameters} & Amplia el límite de memoria\\
+        \hline
+    \end{tabular}
+\\
+
+Si \textit{datos} = TRUE, el código pedirá al usuario los datos previamente a través de un cuadro de busqueda. Deberá buscar los datos con extensión \textit{.RData} y cargarlos. En caso de que \textit{datos} = FALSE, el programa se encargará de subir los archivos a través de \textit{archivo} (la variable que contiene el nombre del archivo del cual se desea subir la información)
+
+La siguiente tabla muestra las principales funciones que se ocuparon para la extracción de datos:\\[0.5cm]
+\begin{tabular}{ |l|p{7cm}| }
+        \hline
+        \multicolumn{2}{|c|}{Funciones} \\
+        \hline
+        \textit{load} & Carga los datos en caso de tenerlos precargados\\
+        \textit{file.choose} & Abre un cuadro de busqueda para localizar los archivos precargados\\
+        \textit{gc} & Libera memoria para poder realizar la carga de datos más eficientemente\\
+        \textit{readWorksheetFromFile} & Extrae información de un archivo Excel\\
+        \hline
+    \end{tabular}
+\\[0.5cm]
+El reporte generado puede ser conjunto o separado por instituciones dependiendo de la variable de entrada \texttt{toge}.
+\begin{enumerate}
+    \item Si \texttt{toge} = TRUE. El reporte genera un libro de Excel con las matrices de las instituciones en diferentes hojas de cálculo.
+    \item Si \texttt{toge} = FALSE. El reporte genera un libro de Excel por cada matriz correspondiente a cada institución.
+\end{enumerate}
+\section{Módulos}
+Se manejaron diferentes partes para la creación de la matriz resultante. A estas partes les llamaremos \textit{módulos} de la matriz. Cada módulo comprende cierta información para la matriz resultante y aunque todas coinciden en una misma estructura lógica, podemos destacar que existen cierto módulos que difieren en ciertas características, por lo que su estructura lógica se extiende a las demás. \\
+
+El primer filtro para la creación de la matriz está dado por la siguiente instrucción
+\begin{flushleft}
+\texttt{which(cat.inst.cct.h\$web)}
+\end{flushleft}
+La función \texttt{which} nos indica las instituciones con la propiedad de tener la variable \texttt{WEB} (extraída del catálogo de instituciones) igual a VERDADERO. \\ Una vez identificadas las instituciones que generarán un reporte, se procede a realizar un \texttt{LOOP} para hacer la creación de la matriz para cada institución.
+
+\subsection{Clave y nombre}
+El módulo \textit{Clave y nombre} genera la información correspondiente a la identificación de la institución de la cual creará la matriz de condiciones.\\ Se asigna la clave de la institución a la variable \texttt{clave\_inst} y se crea una hoja de cálculo con la clave de la institución en el libro ya previamente creado.
+
+\begin{flushleft}
+    \texttt{clave <- cat.inst.cct.h\$clave[i]} \\
+    \texttt{createSheet(wb, name = clave\_inst)}
+\end{flushleft}
+
+\subsection{Productos vigentes}
+Genera la variable \textit{prods.vigentes} con todos las claves de los productos vigentes, con las siguientes condiciones:
+\begin{enumerate}
+    \item Los productos deben corresponder a la institución \textit{nombre}.
+    \item Los productos deben cumplir que la variable \textit{fecha\_can} sea igual a 1900-01-02.
+    \item Los productos no deben estar en el catálogo de \textit{no\_web}
+\end{enumerate}
+La función \texttt{sort} ordena la clave de los productos de menor a mayor. Se genera la variable \textit{names.prods} con los nombres de los productos vigentes.
+\begin{flushleft}
+    \texttt{prods.vigentes <- sort(cat.prod.h[cat.prod.h\$inst==nombre \& as.Date(cat.prod.h\$fecha\_can)=="1900-01-02",1])} \\
+    \texttt{prods.vigentes <- prods.vigentes[is.na(match(prods.vigentes, cat.noweb.inst\$prod\_id))]} \\
+    \texttt{names.prods <- cat.prod.h\$nombre[match(prods.vigentes, cat.prod.h\$prod\_id)]} \\
+\end{flushleft}
+
+\subsection{Especificaciones}
+
+\subsection{Aforos}
+\subsection{Hechos generadores de comisiones}
+\subsection{Hechos generadores de comisiones II}
+\subsection{Avaluos}
+\subsection{Rango de plazos}
+\subsection{Pagos al millar fijos}
+\subsection{Pagos al millar no uniformes}
+\subsection{Tasa de interés}
+\subsection{Seguros}
+\subsection{Seguros con gracias y bonificaciones (vida)}
+\subsection{Seguros con gracias y bonificaciones (daños)}
+\subsection{CAT}
+
+\section{Escritura}
+\section{Formato}
+
+\end{document}
